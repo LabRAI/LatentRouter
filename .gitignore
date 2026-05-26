@@ -1,0 +1,35 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+build/
+dist/
+
+# Local benchmark data and generated artifacts.
+data/raw/
+data/processed/
+artifacts/
+outputs/
+figures/
+*.pkl
+*.pt
+*.npy
+*.npz
+
+# Paper/build/local files that should not enter an anonymous code release.
+*.pdf
+*.pptx
+*.png
+*.jpg
+*.jpeg
+*.webp
+.claude/
+.codex/
+.agents/
+.conda/
+AGENTS.md
+CLAUDE.md

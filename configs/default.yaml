@@ -1,0 +1,52 @@
+data:
+  benchmark: mmr
+  source: data/examples/toy_mmr.csv
+  source_split: train
+  processed_dir: data/processed/toy_mmr
+  split_manifest:
+  train_fraction: 0.7
+  validation_fraction: 0.1
+  test_fraction: 0.2
+  seed: 20260308
+  adapter_options: {}
+
+features:
+  backend: hashing
+  openclip_model: ViT-B-32
+  openclip_pretrained: laion2b_s34b_b79k
+  hashing_dim: 192
+  batch_size: 32
+  device: cpu
+  output_dir:
+  force: false
+
+router:
+  name: paper_section_3_2_latent_communication
+  model_path:
+  random_seed: 20260308
+  hyperparameters:
+    setting: performance_oriented
+    hidden_dim: 48
+    num_query_tokens: 4
+    num_capsules: 7
+    num_layers: 2
+    num_heads: 4
+    residual_bound: 0.05
+    feedback_temperature: 0.25
+    batch_size: 64
+    epochs: 10
+    patience: 3
+    calibration_fraction: 0.35
+    max_calibration_samples: 512
+    device: cpu
+
+evaluation:
+  lambda_min_exp: -4.0
+  lambda_max_exp: 4.0
+  num_lambdas: 51
+  output_dir: artifacts/runs
+  aggregate_by:
+    - dataset_name
+    - mode_id
+  protocol_options: {}
+  measure_throughput: true
