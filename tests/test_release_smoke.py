@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+import torch
 import yaml
 
 from latentrouter.cli import main
@@ -9,6 +11,9 @@ from scripts.generate_toy_mmr import generate_toy_frame
 
 
 def test_latentrouter_toy_pipeline(tmp_path: Path):
+    if not torch.cuda.is_available():
+        pytest.skip("GPU smoke test requires CUDA.")
+
     source = tmp_path / "toy_mmr.csv"
     generate_toy_frame(rows_per_group=12, seed=7).to_csv(source, index=False)
 
@@ -38,7 +43,7 @@ def test_latentrouter_toy_pipeline(tmp_path: Path):
                 "epochs": 2,
                 "patience": 1,
                 "max_calibration_samples": 24,
-                "device": "cpu",
+                "device": "cuda",
             },
         },
         "evaluation": {

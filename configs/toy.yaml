@@ -14,7 +14,7 @@ features:
   backend: hashing
   hashing_dim: 192
   batch_size: 32
-  device: cpu
+  device: cuda
   force: false
 
 router:
@@ -35,7 +35,7 @@ router:
     patience: 3
     calibration_fraction: 0.35
     max_calibration_samples: 512
-    device: cpu
+    device: cuda
 
 evaluation:
   num_lambdas: 51

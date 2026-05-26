@@ -16,7 +16,7 @@ features:
   openclip_pretrained: laion2b_s34b_b79k
   hashing_dim: 192
   batch_size: 32
-  device: cpu
+  device: cuda
   output_dir:
   force: false
 
@@ -38,7 +38,7 @@ router:
     patience: 3
     calibration_fraction: 0.35
     max_calibration_samples: 512
-    device: cpu
+    device: cuda
 
 evaluation:
   lambda_min_exp: -4.0

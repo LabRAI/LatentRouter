@@ -33,7 +33,7 @@ tests/                            Release smoke test
 
 ## Requirements
 
-Python 3.10 or newer is recommended. The default smoke path uses CPU-only hashing features.
+Python 3.10 or newer is recommended. The default smoke path trains the router on CUDA. A CUDA-capable PyTorch install is expected for smoke tests and benchmark reproduction.
 
 ```bash
 python -m venv .venv
@@ -68,25 +68,21 @@ latentrouter --config configs/toy.yaml run \
   --force-retrain
 ```
 
-The command writes normalized artifacts, cached features, a trained router checkpoint, `metrics.json`, `summary.md`, and frontier plots under `artifacts/`.
+The command writes normalized artifacts, cached features, a trained router checkpoint, `metrics.json`, `summary.md`, and frontier plots under `artifacts/`. The toy config sets `router.hyperparameters.device: cuda`; the hashing feature backend is lightweight, but the trainable LatentRouter itself runs on GPU.
 
 ## Running On Benchmark Data
 
-The release does not include benchmark datasets. To run on local MMR-style data, provide a CSV/parquet file with one row per query and per-model columns such as:
+The release does not commit benchmark datasets because they are external assets, but the code runs directly from the original public sources.
 
-```text
-sample_id,dataset_idx,question,answer,image_paths,
-model_a_prediction,model_a_correct,model_a_token,model_a_cost,
-model_b_prediction,model_b_correct,model_b_token,model_b_cost
-```
-
-Then run:
+MMR-Bench source: https://huggingface.co/datasets/gh0stHunter/MMR-Bench
 
 ```bash
+pip install -e ".[hf]"
 latentrouter --config configs/default.yaml run \
   --benchmark mmr \
-  --source /path/to/mmr_style_file.parquet \
-  --processed-dir data/processed/mmr \
+  --source hf://gh0stHunter/MMR-Bench \
+  --source-split train \
+  --processed-dir data/processed/mmr_bench \
   --backend hashing \
   --model-path artifacts/models/mmr_latentrouter.pkl \
   --run-dir artifacts/runs/mmr_latentrouter \
@@ -94,7 +90,35 @@ latentrouter --config configs/default.yaml run \
   --force-retrain
 ```
 
-For richer multimodal features, install the `vision` extra and set `--backend openclip`.
+VL-RouterBench sources: https://github.com/K1nght/VL-RouterBench and https://huggingface.co/datasets/KinghtH/VL-RouterBench
+
+```bash
+pip install -e ".[hf]"
+mkdir -p data/raw/vl_routerbench
+huggingface-cli download KinghtH/VL-RouterBench vlm_router_data.tar.gz \
+  --repo-type dataset \
+  --local-dir data/raw/vl_routerbench
+
+latentrouter --config configs/default.yaml run \
+  --benchmark vl_routerbench \
+  --source data/raw/vl_routerbench/vlm_router_data.tar.gz \
+  --processed-dir data/processed/vl_routerbench \
+  --backend hashing \
+  --model-path artifacts/models/vl_latentrouter.pkl \
+  --run-dir artifacts/runs/vl_latentrouter \
+  --force \
+  --force-retrain
+```
+
+Both commands use the default CUDA router setting. For richer multimodal features, install the `vision` extra and set `--backend openclip`; keep the same feature directory for every method you compare.
+
+The MMR adapter also accepts a local CSV/parquet file with one row per query and per-model columns such as:
+
+```text
+sample_id,dataset_idx,question,answer,image_paths,
+model_a_prediction,model_a_correct,model_a_token,model_a_cost,
+model_b_prediction,model_b_correct,model_b_token,model_b_cost
+```
 
 ## Reproducibility Notes
 
@@ -110,4 +134,4 @@ For richer multimodal features, install the `vision` extra and set `--backend op
 pytest -q
 ```
 
-The release smoke test generates a tiny synthetic dataset and trains the LatentRouter implementation for a short CPU run.
+The release smoke test generates a tiny synthetic dataset and trains the LatentRouter implementation on CUDA. CPU-only hosts skip this test by design.
