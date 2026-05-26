@@ -1,0 +1,31 @@
+name: Sync from source repository
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 * * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-from-source
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mirror main from source
+        env:
+          SOURCE_REPO: XueqiC/LatentRouter
+          TARGET_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          workdir="$(mktemp -d)"
+          git init "$workdir"
+          cd "$workdir"
+          git remote add source "https://github.com/${SOURCE_REPO}.git"
+          git fetch --depth=1 source main
+          git push --force "https://x-access-token:${GH_TOKEN}@github.com/${TARGET_REPO}.git" FETCH_HEAD:main
