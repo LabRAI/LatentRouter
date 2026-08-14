@@ -380,7 +380,11 @@ def run_from_scratch_experiment(
         run_dir=output_dir / "joint_shuffled",
         prediction_wall_time_seconds=shuffled_time,
     )
+    primary_metric_name = str(joint_metrics["metrics"].get("primary_metric", "nAUC"))
+    joint_primary_metric = float(joint_metrics["metrics"]["primary_metric_value"])
+    shuffled_primary_metric = float(shuffled_metrics["metrics"]["primary_metric_value"])
     baseline_nauc: float | None = None
+    baseline_primary_metric: float | None = None
     baseline_prediction_time: float | None = None
     if baseline_path is not None and Path(baseline_path).exists():
         baseline = BaseRouter.load(baseline_path)
@@ -399,20 +403,29 @@ def run_from_scratch_experiment(
             run_dir=output_dir / "baseline",
             prediction_wall_time_seconds=baseline_prediction_time,
         )
-        baseline_nauc = float(baseline_metrics["metrics"]["nAUC"])
+        baseline_primary_metric = float(baseline_metrics["metrics"]["primary_metric_value"])
+        if "nAUC" in baseline_metrics["metrics"]:
+            baseline_nauc = float(baseline_metrics["metrics"]["nAUC"])
+
+    joint_nauc = float(joint_metrics["metrics"]["nAUC"]) if "nAUC" in joint_metrics["metrics"] else None
+    shuffled_nauc = float(shuffled_metrics["metrics"]["nAUC"]) if "nAUC" in shuffled_metrics["metrics"] else None
 
     summary = {
         "seed": seed,
         "training": "all_router_and_reread_parameters_from_random_initialization",
         "epochs_completed": len(router.training_history_),
         "training_time_seconds": router.fit_summary_["training_time_seconds"],
-        "joint_nAUC": float(joint_metrics["metrics"]["nAUC"]),
-        "shuffled_nAUC": float(shuffled_metrics["metrics"]["nAUC"]),
+        "primary_metric": primary_metric_name,
+        "joint_primary_metric": joint_primary_metric,
+        "shuffled_primary_metric": shuffled_primary_metric,
+        "baseline_primary_metric": baseline_primary_metric,
+        "joint_nAUC": joint_nauc,
+        "shuffled_nAUC": shuffled_nauc,
         "shuffled_delta_vs_joint": float(
-            shuffled_metrics["metrics"]["nAUC"] - joint_metrics["metrics"]["nAUC"]
+            shuffled_primary_metric - joint_primary_metric
         ),
         "baseline_nAUC": baseline_nauc,
-        "delta_vs_baseline": None if baseline_nauc is None else float(joint_metrics["metrics"]["nAUC"] - baseline_nauc),
+        "delta_vs_baseline": None if baseline_primary_metric is None else float(joint_primary_metric - baseline_primary_metric),
         "prediction_time_seconds": prediction_time,
         "baseline_prediction_time_seconds": baseline_prediction_time,
         "attention": attention,

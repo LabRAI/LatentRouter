@@ -113,7 +113,13 @@ class OpenClipEncoder(BaseEncoder):
             image_bytes = base64.b64decode(encoded)
         except Exception:
             return None
-        return self.Image.open(io.BytesIO(image_bytes)).convert("RGB")
+        try:
+            return self.Image.open(io.BytesIO(image_bytes)).convert("RGB")
+        except Exception:
+            # VL-RouterBench contains a small number of malformed or empty
+            # TSV payloads. Treat them like missing images so one bad record
+            # does not abort the whole feature extraction pass.
+            return None
 
     def encode_texts(self, texts: list[str]) -> np.ndarray:
         vectors: list[np.ndarray] = []

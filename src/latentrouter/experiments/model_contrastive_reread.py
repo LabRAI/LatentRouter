@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import copy
+import base64
 import hashlib
+import io
 import json
 import math
 import os
@@ -83,6 +85,46 @@ def _normalize_image_paths(value: Any) -> list[str]:
     return [str(value)]
 
 
+def _open_image_reference(reference: str, image_cache: dict[Path, Any], image_module: Any) -> Any | None:
+    """Open a normal path or a VL-RouterBench TSV/base64 image reference."""
+
+    if not str(reference).startswith("tsvref::"):
+        path = Path(reference)
+        if not path.exists():
+            return None
+        return image_module.open(path).convert("RGB")
+
+    payload = str(reference).removeprefix("tsvref::")
+    try:
+        tsv_path_text, index_value = payload.split("::index::", 1)
+    except ValueError:
+        return None
+    tsv_path = Path(tsv_path_text)
+    if tsv_path not in image_cache:
+        try:
+            import pandas as pd
+
+            if len(image_cache) >= 2:
+                image_cache.clear()
+            frame = pd.read_csv(
+                tsv_path,
+                sep="\t",
+                usecols=["index", "image"],
+                dtype={"index": str, "image": str},
+            )
+            frame["index"] = frame["index"].astype(str)
+            image_cache[tsv_path] = frame.set_index("index")["image"].to_dict()
+        except Exception:
+            return None
+    encoded = image_cache[tsv_path].get(str(index_value))
+    if encoded is None:
+        return None
+    try:
+        return image_module.open(io.BytesIO(base64.b64decode(str(encoded)))).convert("RGB")
+    except Exception:
+        return None
+
+
 def build_openclip_patch_cache(
     *,
     processed_dir: str | Path,
@@ -141,9 +183,18 @@ def build_openclip_patch_cache(
     model.eval()
     model.visual.output_tokens = True
 
-    probe_path = _normalize_image_paths(ordered.iloc[0]["image_paths"])[0]
-    with Image.open(probe_path) as image:
-        probe = preprocess(image.convert("RGB")).unsqueeze(0).to(target_device)
+    image_cache: dict[Path, Any] = {}
+    probe_image = None
+    for candidate in _normalize_image_paths(ordered.iloc[0]["image_paths"]):
+        probe_image = _open_image_reference(candidate, image_cache, Image)
+        if probe_image is not None:
+            break
+    if probe_image is None:
+        raise RuntimeError("Patch extraction could not open the first sample image.")
+    try:
+        probe = preprocess(probe_image).unsqueeze(0).to(target_device)
+    finally:
+        probe_image.close()
     with torch.no_grad():
         probe_output = model.visual(probe)
     if not isinstance(probe_output, tuple) or len(probe_output) != 2:
@@ -162,7 +213,6 @@ def build_openclip_patch_cache(
     missing_images = 0
     started = time.perf_counter()
     amp_enabled = target_device.type == "cuda"
-
     try:
         for start in range(0, len(ordered), batch_size):
             stop = min(start + batch_size, len(ordered))
@@ -170,15 +220,23 @@ def build_openclip_patch_cache(
             valid_positions: list[int] = []
             for local_index, value in enumerate(ordered.iloc[start:stop]["image_paths"].tolist()):
                 paths = _normalize_image_paths(value)
-                image_path = next((candidate for candidate in paths if Path(candidate).exists()), None)
-                if image_path is None:
+                image = None
+                for candidate in paths:
+                    image = _open_image_reference(candidate, image_cache, Image)
+                    if image is not None:
+                        break
+                if image is None:
                     missing_images += 1
                     continue
                 try:
-                    with Image.open(image_path) as image:
-                        tensors.append(preprocess(image.convert("RGB")))
+                    tensors.append(preprocess(image))
+                    image.close()
                     valid_positions.append(local_index)
                 except Exception:
+                    try:
+                        image.close()
+                    except Exception:
+                        pass
                     missing_images += 1
             batch_array = np.zeros((stop - start, patch_count, patch_dim), dtype=np.float16)
             if tensors:
