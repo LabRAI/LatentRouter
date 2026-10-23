@@ -1,7 +1,5 @@
-"""latentrouter package."""
+from latentrouter.data import RoutingData
+from latentrouter.router import LatentRouter
 
-from latentrouter.cli import main
-from latentrouter.data.normalize import prepare_benchmark, prepare_dataset
-from latentrouter.evaluation.runner import run_router_on_benchmark
-
-__all__ = ["main", "prepare_benchmark", "prepare_dataset", "run_router_on_benchmark"]
+__all__ = ["LatentRouter", "RoutingData"]
+__version__ = "1.0.0"

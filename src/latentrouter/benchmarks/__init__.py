@@ -1,4 +1,5 @@
-from latentrouter.benchmarks.base import BenchmarkAdapter, BenchmarkProtocol
-from latentrouter.benchmarks.registry import create_adapter, load_benchmark_protocol
+from latentrouter.benchmarks import mmr_bench, vl_routerbench
 
-__all__ = ["BenchmarkAdapter", "BenchmarkProtocol", "create_adapter", "load_benchmark_protocol"]
+BENCHMARKS = {"mmr_bench": mmr_bench, "vl_routerbench": vl_routerbench}
+
+__all__ = ["BENCHMARKS", "mmr_bench", "vl_routerbench"]

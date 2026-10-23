@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "latentrouter"
-version = "0.1.0"
-description = "Latent communication router for offline multimodal model routing."
+version = "1.0.0"
+description = "LatentRouter: Can We Choose the Right Multimodal Large Language Model Before Seeing Its Answer?"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
+authors = [{name = "Xueqi Cheng"}, {name = "Yushun Dong"}]
 dependencies = [
-  "matplotlib>=3.8",
   "numpy>=1.26",
   "pandas>=2.2",
   "pyarrow>=15.0",
@@ -20,13 +20,11 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-hf = [
-  "datasets>=3.3",
-  "huggingface-hub>=0.27",
-]
-vision = [
-  "open-clip-torch>=2.26",
+features = [
+  "open-clip-torch>=2.24",
   "Pillow>=10.0",
+  "tqdm>=4.66",
+  "transformers>=4.40,<5",
 ]
 dev = [
   "pytest>=8.3",

@@ -1,0 +1,35 @@
+benchmark: vl_routerbench
+
+data:
+  root: data/vl_routerbench
+  features: null
+
+router:
+  hidden_dim: 96
+  num_query_tokens: 6
+  num_capsules: 7
+  num_layers: 2
+  num_heads: 4
+  dropout: 0.1
+  residual_bound: 0.05
+  feedback_temperature: 0.25
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  batch_size: 512
+  epochs: 16
+  patience: 4
+  pairwise_weight: 0.35
+  listwise_weight: 0.65
+  utility_weight: 0.25
+  residual_weight: 0.05
+  listwise_temperature: 0.05
+  calibration_fraction: 0.35
+  max_calibration_samples: 4096
+  num_neighbors: 32
+  shrinkage: 5.0
+  probe_alpha: 10000.0
+  probe_folds: 5
+  cost_alpha: 10000.0
+  device: auto
+
+lambdas: [0.0, 0.01, 0.03, 0.1, 0.3, 1.0]
