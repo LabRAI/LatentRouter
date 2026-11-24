@@ -1,15 +1,25 @@
-# LatentRouter
+<div align="center">
+
+# LatentRouter: Can We Choose the Right Multimodal Large Language Model Before Seeing Its Answer?
+
+[![NeurIPS 2026](https://img.shields.io/badge/NeurIPS-2026-6f42c1.svg)](https://neurips.cc/Conferences/2026) [![OpenReview](https://img.shields.io/badge/Paper-OpenReview-8c1b13.svg)](https://openreview.net/forum?id=zPsIxODTpo) [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-3776ab.svg?logo=python&logoColor=white)](https://www.python.org/) [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
+</div>
 
 This is the official repository of our NeurIPS 2026 paper **"LatentRouter: Can We Choose the Right Multimodal Large Language Model Before Seeing Its Answer?"**
 
 LatentRouter treats multimodal LLM routing as counterfactual utility prediction: before any candidate is called, it estimates how every available MLLM would answer the same image-question query and routes to the one with the best predicted quality-cost tradeoff.
+
+<p align="center">
+  <img src="assets/latentrouter_overview.png" alt="Overview of LatentRouter" width="100%">
+</p>
 
 ## Method
 
 For a query $x$ and a candidate pool $\mathcal{M}=\{m_1,\ldots,m_K\}$ with available models $\Omega(x)$:
 
 1. **Multimodal routing capsules.** The question and image embeddings are projected into query tokens, and $C$ learned capsule queries cross-attend to them, giving the routing capsules $R^{(0)}(x)$.
-2. **Model capability tokens.** Each candidate is represented by $a_i^{(0)}=\phi([p_i;c_i;\ell_i;b_i(x)])$: its calibration profile $p_i$ (overall and per-slice accuracy, pairwise win rates against the other candidates, model metadata), normalized cost $c_i$, latency $\ell_i$, and query-specific calibration statistics $b_i(x)$. The $k$ training queries most similar to $x$ form a query-specific slice; the accuracy of $m_i$ on this neighborhood, shrunk toward its overall accuracy, is combined with a linear-probe estimate of its accuracy on $x$ into the calibrated estimate $\pi_i(x)$.
+2. **Model capability tokens.** Each candidate is represented by $a_i^{(0)}=\phi([p_i;\bar c_i;\ell_i;b_i(x)])$: its calibration profile $p_i$ (overall and per-slice accuracy, pairwise win rates against the other candidates, model metadata), average normalized cost $\bar c_i$ on the training split, latency $\ell_i$, and query-specific calibration statistics $b_i(x)$. The $k$ training queries most similar to $x$ form a query-specific slice; the accuracy of $m_i$ on this neighborhood, shrunk toward its overall accuracy, is combined with a linear-probe estimate of its accuracy on $x$ into the calibrated estimate $\pi_i(x)$.
 3. **Latent communication.** $H$ layers in which each model token reads the capsules from its own perspective, model tokens compare with each other through availability-masked self-attention with a pairwise comparison bias, and the capsules receive decision-aware feedback weighted toward the candidates near the decision boundary.
 4. **Distributional outcome prediction.** The final model token predicts the outcome distribution relative to the calibration estimate, $\mu_i=\mathrm{sigmoid}(\mathrm{logit}\,\pi_i(x)+g_\theta(a_i^{(H)}))$ with $\sigma_i^2=\mu_i(1-\mu_i)$ for answer quality in $[0,1]$.
 5. **Bounded capsule correction.** $\tilde\mu_i=\mu_i+\rho\tanh(h_\theta([a_i^{(H)};\mathrm{Pool}(R^{(H)})]))$.
@@ -127,4 +137,4 @@ tests/
 
 ## License
 
-MIT
+This project is released under the [MIT License](LICENSE).
