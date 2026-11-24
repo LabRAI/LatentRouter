@@ -1,8 +1,20 @@
+<div align="center">
+
 # LatentRouter
+
+**Can We Choose the Right Multimodal Large Language Model Before Seeing Its Answer?**
+
+[![NeurIPS 2026](https://img.shields.io/badge/NeurIPS-2026-6f42c1.svg)](https://neurips.cc/Conferences/2026) [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-3776ab.svg?logo=python&logoColor=white)](https://www.python.org/) [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
+</div>
 
 This is the official repository of our NeurIPS 2026 paper **"LatentRouter: Can We Choose the Right Multimodal Large Language Model Before Seeing Its Answer?"**
 
 LatentRouter treats multimodal LLM routing as counterfactual utility prediction: before any candidate is called, it estimates how every available MLLM would answer the same image-question query and routes to the one with the best predicted quality-cost tradeoff.
+
+<p align="center">
+  <img src="assets/latentrouter_overview.png" alt="Overview of LatentRouter" width="100%">
+</p>
 
 ## Method
 
