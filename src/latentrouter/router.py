@@ -26,7 +26,7 @@ class LatentRouter:
     """LatentRouter: counterfactual utility prediction over a pool of candidate MLLMs.
 
     The capability token of model m_i is built from its calibration profile p_i (including its normalized
-    latency l_i when latencies are given), its normalized average training cost c_i and the query-specific
+    latency l_i when latencies are given), its normalized average training cost c_bar_i and the query-specific
     calibration statistics b_i(x), whose last entry is the calibrated estimate pi_i(x). After latent
     communication with the routing capsules, the outcome head predicts mu_i = sigmoid(logit pi_i(x) + g(a_i)),
     the bounded capsule correction gives mu_tilde_i, and the routing score is
